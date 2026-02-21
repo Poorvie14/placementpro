@@ -37,10 +37,6 @@ app.include_router(mentorship.router, prefix=f"{settings.API_V1_STR}/mentorship"
 app.include_router(tpo.router, prefix=f"{settings.API_V1_STR}/tpo", tags=["tpo"])
 app.include_router(ai.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to PlacementPro API"}
-
 # ── Static Frontend Serving for Deployment ──
 # Resolve the absolute path of the directory containing main.py, then go up to the backend root where 'dist' is built by Docker
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
