@@ -42,8 +42,10 @@ async def root():
     return {"message": "Welcome to PlacementPro API"}
 
 # ── Static Frontend Serving for Deployment ──
-# If the 'dist' folder exists, mount it so FastAPI serves the React app
-frontend_dist_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dist")
+# Resolve the absolute path of the directory containing main.py, then go up to the backend root where 'dist' is built by Docker
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+frontend_dist_path = os.path.join(BASE_DIR, "dist")
+
 if os.path.exists(frontend_dist_path):
     # Mount the /assets/ folder explicitly
     app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist_path, "assets")), name="assets")
