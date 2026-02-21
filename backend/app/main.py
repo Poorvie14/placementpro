@@ -40,18 +40,24 @@ app.include_router(ai.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])
 @app.get("/api/db-test")
 async def db_test():
     try:
-        from app.core.database import get_database, db_config
+        from app.core.database import get_database
+        from app.core.security import verify_password
         db = get_database()
         if db is None:
-            return {"status": "error", "message": "Database object is None. connect_to_mongo() may have failed."}
+            return {"status": "error", "message": "Database object is None."}
             
-        # Try a ping command
-        await db.command("ping")
+        user = await db["users"].find_one({"email": "student1@college.edu"})
+        if not user:
+            return {"status": "error", "message": "student1 not found"}
+            
+        hashed = user.get("hashed_password")
+        res = verify_password("password123", hashed)
+        
         return {
             "status": "success", 
-            "message": "Successfully connected to MongoDB Atlas!",
-            "db_name": db.name,
-            "url_configured": bool(settings.MONGODB_URL)
+            "message": "Verify password succeeded!",
+            "hash": hashed,
+            "res": res
         }
     except Exception as e:
         import traceback
