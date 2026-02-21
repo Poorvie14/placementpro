@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Union
+import hashlib
 from jose import jwt
 from passlib.context import CryptContext
 from app.core.config import settings
@@ -16,12 +17,14 @@ def create_access_token(subject: Union[str, Any], role: str, expires_delta: time
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+def _pre_hash(password: str) -> str:
+    # Pre-hash the password with SHA-256 to create a fixed-size 64 hex character string.
+    # This completely bypasses the bcrypt 72-byte limit bug which crashes the server,
+    # regardless of whether the user types a 5-character or 500-character password.
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    # Bcrypt limits passwords to 72 bytes. Truncating to avoid crash on long passwords.
-    plain_password = plain_password[:72]
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(_pre_hash(plain_password), hashed_password)
 
 def get_password_hash(password: str) -> str:
-    # Bcrypt limits passwords to 72 bytes. Truncating to avoid crash on long passwords.
-    password = password[:72]
-    return pwd_context.hash(password)
+    return pwd_context.hash(_pre_hash(password))
