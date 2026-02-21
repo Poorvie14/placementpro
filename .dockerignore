@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+frontend/dist
+frontend/build
+.env
+__pycache__
+*.pyc
+backend/venv
+.vscode
+.idea
+.git
+.gitignore
