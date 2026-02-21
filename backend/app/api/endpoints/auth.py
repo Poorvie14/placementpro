@@ -36,21 +36,29 @@ async def register(user_in: UserCreate) -> Any:
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
-    db = get_database()
-    user = await db["users"].find_one({"email": form_data.username})
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
-    
-    if not verify_password(form_data.password, user["hashed_password"]):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
-    
-    access_token = create_access_token(
-        subject=str(user["_id"]), role=user["role"]
-    )
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": UserResponse.from_mongo(user)
-    }
+    try:
+        db = get_database()
+        user = await db["users"].find_one({"email": form_data.username})
+        if not user:
+            raise HTTPException(status_code=400, detail="Incorrect email or password")
+        
+        if not verify_password(form_data.password, user["hashed_password"]):
+            raise HTTPException(status_code=400, detail="Incorrect email or password")
+        
+        access_token = create_access_token(
+            subject=str(user["_id"]), role=user["role"]
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": UserResponse.from_mongo(user)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        print(f"LOGIN ERROR: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
