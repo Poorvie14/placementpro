@@ -37,6 +37,26 @@ app.include_router(mentorship.router, prefix=f"{settings.API_V1_STR}/mentorship"
 app.include_router(tpo.router, prefix=f"{settings.API_V1_STR}/tpo", tags=["tpo"])
 app.include_router(ai.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])
 
+@app.get("/api/db-test")
+async def db_test():
+    try:
+        from app.core.database import get_database, db_config
+        db = get_database()
+        if db is None:
+            return {"status": "error", "message": "Database object is None. connect_to_mongo() may have failed."}
+            
+        # Try a ping command
+        await db.command("ping")
+        return {
+            "status": "success", 
+            "message": "Successfully connected to MongoDB Atlas!",
+            "db_name": db.name,
+            "url_configured": bool(settings.MONGODB_URL)
+        }
+    except Exception as e:
+        import traceback
+        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
+
 # ── Static Frontend Serving for Deployment ──
 # Resolve the absolute path of the directory containing main.py, then go up to the backend root where 'dist' is built by Docker
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
