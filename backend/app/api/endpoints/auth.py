@@ -9,21 +9,29 @@ router = APIRouter()
 
 @router.post("/register", response_model=UserResponse)
 async def register(user_in: UserCreate) -> Any:
-    db = get_database()
-    user = await db["users"].find_one({"email": user_in.email})
-    if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this username already exists in the system.",
-        )
-    
-    user_dict = user_in.model_dump()
-    user_dict["hashed_password"] = get_password_hash(user_dict.pop("password"))
-    
-    result = await db["users"].insert_one(user_dict)
-    created_user = await db["users"].find_one({"_id": result.inserted_id})
-    
-    return UserResponse.from_mongo(created_user)
+    try:
+        db = get_database()
+        user = await db["users"].find_one({"email": user_in.email})
+        if user:
+            raise HTTPException(
+                status_code=400,
+                detail="The user with this username already exists in the system.",
+            )
+        
+        user_dict = user_in.model_dump()
+        user_dict["hashed_password"] = get_password_hash(user_dict.pop("password"))
+        
+        result = await db["users"].insert_one(user_dict)
+        created_user = await db["users"].find_one({"_id": result.inserted_id})
+        
+        return UserResponse.from_mongo(created_user)
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        print(f"REGISTER ERROR: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/login", response_model=Token)
