@@ -31,7 +31,7 @@ async def register(user_in: UserCreate) -> Any:
         import traceback
         print(f"REGISTER ERROR: {str(e)}")
         print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
 @router.post("/login", response_model=Token)
@@ -60,5 +60,5 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
         import traceback
         print(f"LOGIN ERROR: {str(e)}")
         print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=traceback.format_exc())
 
