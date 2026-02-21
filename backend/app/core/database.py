@@ -11,7 +11,11 @@ db_config = Database()
 async def connect_to_mongo():
     logging.info("Connecting to MongoDB...")
     db_config.client = AsyncIOMotorClient(settings.MONGODB_URL)
-    db_config.db = db_config.client.get_database()
+    try:
+        db_config.db = db_config.client.get_database()
+    except Exception:
+        # Fallback if no database name is provided in the connection string
+        db_config.db = db_config.client.get_database("placementpro")
     logging.info("Connected to MongoDB!")
 
 async def close_mongo_connection():
